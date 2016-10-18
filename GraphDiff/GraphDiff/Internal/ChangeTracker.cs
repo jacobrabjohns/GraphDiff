@@ -98,17 +98,17 @@ namespace RefactorThis.GraphDiff.Internal
             var parentType = ObjectContext.GetObjectType(parent.GetType());
             var childType = ObjectContext.GetObjectType(child.GetType());
 
-            var parentNavigationProperties = _entityManager
-                    .GetNavigationPropertiesForType(childType)
-                    .Where(navigation => navigation.TypeUsage.EdmType.Name == parentType.Name && !mappedNavigationProperties.Contains(navigation.Name))
-                    .Select(navigation => childType.GetProperty(navigation.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-                    .ToList();
+            var parentNavigationProperties =
+                _entityManager.GetNavigationPropertiesForType(childType)
+                              .Where(navigation => navigation.TypeUsage.EdmType.Name == parentType.Name && !mappedNavigationProperties.Contains(navigation.Name))
+                              .Select(navigation => childType.GetProperty(navigation.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+                              .ToList();
 
             if (parentNavigationProperties.Count > 1)
             {
                 throw new NotSupportedException(
-                        string.Format("Found ambiguous parent navigation property of type '{0}'. Map one of the parents ({1}) as an associate to disambiguate.",
-                                      parentType, GetConcatenatedPropertyNames(parentNavigationProperties)));
+                    string.Format("Found ambiguous parent navigation property of type '{0}'. Map one of the parents ({1}) as an associate to disambiguate.", parentType,
+                                  GetConcatenatedPropertyNames(parentNavigationProperties)));
             }
 
             var parentNavigationProperty = parentNavigationProperties.FirstOrDefault();
@@ -175,12 +175,18 @@ namespace RefactorThis.GraphDiff.Internal
         private void EnsureConcurrency(object entity1, object entity2)
         {
             // get concurrency properties of T
-            var entityType = ObjectContext.GetObjectType(entity1.GetType()); 
+            var entityType = ObjectContext.GetObjectType(entity1.GetType());
             var metadata = ObjectContext.MetadataWorkspace;
 
             var objType = metadata.GetItems<EntityType>(DataSpace.OSpace).Single(p => p.FullName == entityType.FullName);
+            int id = 0;
 
-            var id = objType.MetadataProperties.First(mp => mp.Name == "KeyMembers").Value;
+            object value = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Value;
+            if (value != null)
+            {
+                id = (int)value;
+            }
+
 
             // TODO need internal string, code smells bad.. any better way to do this?
             var cTypeName = (string)objType.GetType()
@@ -207,7 +213,7 @@ namespace RefactorThis.GraphDiff.Internal
                     (type == typeof(byte[]) && !((byte[])obj1).SequenceEqual((byte[])obj2)) ||
                     (type != typeof(byte[]) && !obj1.Equals(obj2))
                     )
-                {                    
+                {
                     throw new DbUpdateConcurrencyException($"{objType.Name} ID : {id} failed optimistic concurrency");
                 }
             }
