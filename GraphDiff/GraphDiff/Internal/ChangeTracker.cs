@@ -181,10 +181,6 @@ namespace RefactorThis.GraphDiff.Internal
             var objType = metadata.GetItems<EntityType>(DataSpace.OSpace).Single(p => p.FullName == entityType.FullName);
 
 
-            string id = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Value.ToString();
-            
-
-
             // TODO need internal string, code smells bad.. any better way to do this?
             var cTypeName = (string)objType.GetType()
                     .GetProperty("CSpaceTypeName", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -211,7 +207,10 @@ namespace RefactorThis.GraphDiff.Internal
                     (type != typeof(byte[]) && !obj1.Equals(obj2))
                     )
                 {
-                    throw new DbUpdateConcurrencyException($"{objType.Name} ID : {id} failed optimistic concurrency");
+                    string idPropName = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Name;
+
+                    var idProp = entity1.GetType().GetProperty(idPropName).GetValue(entity1, null);
+                    throw new DbUpdateConcurrencyException($"{objType.Name} ID : {idProp} failed optimistic concurrency");
                 }
             }
         }
