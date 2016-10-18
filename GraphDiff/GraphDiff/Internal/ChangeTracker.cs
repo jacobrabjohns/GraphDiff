@@ -179,13 +179,10 @@ namespace RefactorThis.GraphDiff.Internal
             var metadata = ObjectContext.MetadataWorkspace;
 
             var objType = metadata.GetItems<EntityType>(DataSpace.OSpace).Single(p => p.FullName == entityType.FullName);
-            int id = 0;
 
-            object value = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Value;
-            if (value != null)
-            {
-                id = (int)value;
-            }
+
+            string id = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Value.ToString();
+            
 
 
             // TODO need internal string, code smells bad.. any better way to do this?
