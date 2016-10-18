@@ -210,7 +210,7 @@ namespace RefactorThis.GraphDiff.Internal
                 {
                     var idPropName = conceptualType.KeyMembers.FirstOrDefault()?.Name;
                     var id = entityType.GetProperty(idPropName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(entity1, null);
-                    throw new DbUpdateConcurrencyException($"{objType.Name} {idPropName} : {id} failed optimistic concurrency");
+                    throw new DbUpdateConcurrencyException($"Your work could not be saved as {objType.Name} ({idPropName} : {id}) has been modified by another user");
                 }
             }
         }
