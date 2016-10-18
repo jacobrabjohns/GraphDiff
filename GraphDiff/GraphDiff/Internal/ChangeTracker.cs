@@ -191,6 +191,7 @@ namespace RefactorThis.GraphDiff.Internal
                     .Where(member => member.TypeUsage.Facets.Any(facet => facet.Name == "ConcurrencyMode" && (ConcurrencyMode)facet.Value == ConcurrencyMode.Fixed))
                     .Select(member => entityType.GetProperty(member.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
                     .ToList();
+           
 
             // Check if concurrency properties are equal
             // TODO EF should do this automatically should it not?
@@ -207,10 +208,9 @@ namespace RefactorThis.GraphDiff.Internal
                     (type != typeof(byte[]) && !obj1.Equals(obj2))
                     )
                 {
-                    string idPropName = objType.MetadataProperties.FirstOrDefault(mp => mp.Name == "KeyMembers")?.Name;
-
-                    var idProp = entity1.GetType().GetProperty(idPropName).GetValue(entity1, null);
-                    throw new DbUpdateConcurrencyException($"{objType.Name} ID : {idProp} failed optimistic concurrency");
+                    var idPropName = conceptualType.KeyMembers.FirstOrDefault()?.Name;
+                    var id = entityType.GetProperty(idPropName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                    throw new DbUpdateConcurrencyException($"{objType.Name} {idPropName} : {id} failed optimistic concurrency");
                 }
             }
         }
