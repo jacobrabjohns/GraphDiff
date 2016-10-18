@@ -175,10 +175,12 @@ namespace RefactorThis.GraphDiff.Internal
         private void EnsureConcurrency(object entity1, object entity2)
         {
             // get concurrency properties of T
-            var entityType = ObjectContext.GetObjectType(entity1.GetType());
+            var entityType = ObjectContext.GetObjectType(entity1.GetType()); 
             var metadata = ObjectContext.MetadataWorkspace;
 
             var objType = metadata.GetItems<EntityType>(DataSpace.OSpace).Single(p => p.FullName == entityType.FullName);
+
+            var id = objType.MetadataProperties.First(mp => mp.Name == "KeyMembers").Value;
 
             // TODO need internal string, code smells bad.. any better way to do this?
             var cTypeName = (string)objType.GetType()
@@ -205,8 +207,8 @@ namespace RefactorThis.GraphDiff.Internal
                     (type == typeof(byte[]) && !((byte[])obj1).SequenceEqual((byte[])obj2)) ||
                     (type != typeof(byte[]) && !obj1.Equals(obj2))
                     )
-                {
-                    throw new DbUpdateConcurrencyException(String.Format("{0} failed optimistic concurrency", concurrencyProp.Name));
+                {                    
+                    throw new DbUpdateConcurrencyException($"{objType.Name} ID : {id} failed optimistic concurrency");
                 }
             }
         }
